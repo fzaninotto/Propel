@@ -670,7 +670,7 @@ class PropelTableDiff
 	 *
 	 * @param  array $modifiedVendors
 	 */
-	public function setModifiedVendorParameterss($modifiedVendors)
+	public function setModifiedVendorParameters($modifiedVendors)
 	{
 		$this->modifiedVendors = $modifiedVendors;
 	}
@@ -702,7 +702,7 @@ class PropelTableDiff
 	 *
 	 * @return array
 	 */
-	public function getModifiedVendors()
+	public function getModifiedVendorParameters()
 	{
 		return $this->modifiedVendors;
 	}

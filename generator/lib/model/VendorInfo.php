@@ -170,6 +170,25 @@ class VendorInfo extends XMLElement
 	}
 
 	/**
+	 * Get a clone of the current VendorInfor object
+	 * 
+	 * @param Boolean $turnParameterNamesToUppercase
+	 */
+	public function getClone($turnParameterNamesToUppercase = false)
+	{
+		$clone = clone $this;
+		if ($turnParameterNamesToUppercase) {
+			$parameters = $clone->getParameters();
+			$clone->setParameters(array());
+			foreach ($parameters as $key => $value) {
+				$clone->addParameter(strtoupper($key), $value);
+			}
+		}
+		
+		return $clone;
+	}
+	
+	/**
 	 * Gets a new merged VendorInfo object.
 	 * @param      VendorInfo $info
 	 * @return     VendorInfo new object with merged parameters

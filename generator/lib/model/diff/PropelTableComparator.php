@@ -339,16 +339,20 @@ class PropelTableComparator
 		$vendorParameterDifferences = 0;
 		
 		if (!$fromTableVendorInfos && $toTableVendorInfos) {
-			$addedVendorInfo = clone(reset($toTableVendorInfos));
+			$addedVendorInfo = reset($toTableVendorInfos);
+			$addedVendorInfo = $addedVendorInfo->getClone($caseInsensitive);
 			$this->tableDiff->setAddedVendorParameters($addedVendorInfo->getParameters());
 			$vendorParameterDifferences += $addedVendorInfo->countParameters();
 		} elseif ($fromTableVendorInfos && !$toTableVendorInfos) {
-			$removedVendorInfo = clone(reset($fromTableVendorInfos));
+			$removedVendorInfo = reset($fromTableVendorInfos);
+			$removedVendorInfo = $removedVendorInfo->getClone($caseInsensitive);
 			$this->tableDiff->setRemovedVendorParameters($removedVendorInfo->getParameters());
 			$vendorParameterDifferences += $removedVendorInfo->countParameters();
 		} else {
-			$fromTableVendorInfo = clone(reset($fromTableVendorInfos));
-			$toTableVendorInfo = clone(reset($toTableVendorInfos));
+			$fromTableVendorInfo = reset($fromTableVendorInfos);
+			$fromTableVendorInfo = $fromTableVendorInfo->getClone($caseInsensitive);
+			$toTableVendorInfo = reset($toTableVendorInfos);
+			$toTableVendorInfo = $toTableVendorInfo->getClone($caseInsensitive);
 			foreach ($fromTableVendorInfo->getParameters() as $name => $fromValue) {
 				if ($toTableVendorInfo->hasParameter($name)) {
 					$toValue = $toTableVendorInfo->getParameter($name);
