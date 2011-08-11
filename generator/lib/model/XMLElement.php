@@ -118,6 +118,8 @@ abstract class XMLElement
 
 	/**
 	 * Gets the any associated VendorInfo object.
+	 *
+	 * @param      string $type Database vendor type (e.g. 'mysql')
 	 * @return     VendorInfo
 	 */
 	public function getVendorInfoForType($type)
@@ -128,6 +130,16 @@ abstract class XMLElement
 			// return an empty object
 			return new VendorInfo($type);
 		}
+	}
+
+	/**
+	 * Return all vendor parameters for all database vendors.
+	 * 
+	 * @return array List of vendor parameters (vendor type => VendorInfo instance)
+	 */
+	public function getVendorInfos()
+	{
+		return $this->vendorInfos;
 	}
 
   /**

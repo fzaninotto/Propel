@@ -96,6 +96,7 @@ class PropelTableComparator
 		$differences += $tc->comparePrimaryKeys($caseInsensitive);
 		$differences += $tc->compareIndices($caseInsensitive);
 		$differences += $tc->compareForeignKeys($caseInsensitive);
+		$differences += $tc->compareVendorParameters($caseInsensitive);
 
 		return ($differences > 0) ? $tc->getTableDiff() : false;
 	}
@@ -310,6 +311,65 @@ class PropelTableComparator
 		}
 
 		return $fkDifferences;
+	}
+
+	/**
+	 * Compare the vendor parameters of the fromTable and the toTable,
+	 * and modifies the inner tableDiff if necessary.
+	 * Returns the number of differences.
+	 *
+	 * @param boolean $caseInsensitive Whether the comparison is case insensitive.
+	 *                                 False by default.
+	 *
+	 * @return integer The number of foreign key differences
+	 */
+	public function compareVendorParameters($caseInsensitive = false)
+	{
+		$fromTableVendorInfos = $this->getFromTable()->getVendorInfos();
+		$toTableVendorInfos = $this->getToTable()->getVendorInfos();
+		if (!$fromTableVendorInfos && !$toTableVendorInfos) {
+			return 0;
+		}
+		
+		// for simplicity's sake, assume there is only one type and its the same
+		if (count($fromTableVendorInfos) > 1 || count($toTableVendorInfos) > 1) {
+			throw new Exception('vendor parameters for more than one vendor type not supported in migrations');
+		}
+		
+		$vendorParameterDifferences = 0;
+		
+		if (!$fromTableVendorInfos && $toTableVendorInfos) {
+			$addedVendorInfo = clone(reset($toTableVendorInfos));
+			$this->tableDiff->setAddedVendorParameters($addedVendorInfo->getParameters());
+			$vendorParameterDifferences += $addedVendorInfo->countParameters();
+		} elseif ($fromTableVendorInfos && !$toTableVendorInfos) {
+			$removedVendorInfo = clone(reset($fromTableVendorInfos));
+			$this->tableDiff->setRemovedVendorParameters($removedVendorInfo->getParameters());
+			$vendorParameterDifferences += $removedVendorInfo->countParameters();
+		} else {
+			$fromTableVendorInfo = clone(reset($fromTableVendorInfos));
+			$toTableVendorInfo = clone(reset($toTableVendorInfos));
+			foreach ($fromTableVendorInfo->getParameters() as $name => $fromValue) {
+				if ($toTableVendorInfo->hasParameter($name)) {
+					$toValue = $toTableVendorInfo->getParameter($name);
+					if ($fromValue != $toValue) {
+						$this->tableDiff->addModifiedVendorParameter($name, $fromValue, $toValue);
+						$vendorParameterDifferences++;
+					}
+					$toTableVendorInfo->removeParameter($name);
+				} else {
+					$this->tableDiff->addRemovedVendorParameter($name, $fromValue);
+					$vendorParameterDifferences++;
+				}
+				$fromTableVendorInfo->removeParameter($name);
+			}
+			foreach ($toTableVendorInfo->getParameters() as $name => $value) {
+				$this->tableDiff->addAddedVendorParameter($name, $value);
+				$vendorParameterDifferences++;
+			}
+		}
+
+		return $vendorParameterDifferences;
 	}
 
 }

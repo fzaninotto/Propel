@@ -96,6 +96,16 @@ class VendorInfo extends XMLElement
 	}
 
 	/**
+	 * Removes parameter.
+	 *
+	 * @param      string $name
+	 */
+	public function removeParameter($name)
+	{
+		unset($this->parameters[$name]);
+	}
+
+	/**
 	 * Gets parameter value.
 	 *
 	 * @param      string $name
@@ -130,13 +140,23 @@ class VendorInfo extends XMLElement
 	}
 
 	/**
-	 * Gets assoc array of parameters for venfor specific info.
+	 * Gets assoc array of parameters for vendor specific info.
 	 *
 	 * @return     array
 	 */
 	public function getParameters()
 	{
 		return $this->parameters;
+	}
+
+	/**
+	 * Gets thenumber of parameters for vendor specific info.
+	 *
+	 * @return     integer
+	 */
+	public function countParameters()
+	{
+		return count($this->parameters);
 	}
 
 	/**

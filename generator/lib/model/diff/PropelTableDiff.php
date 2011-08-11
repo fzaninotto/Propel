@@ -39,6 +39,10 @@ class PropelTableDiff
 	protected $addedFks = array();
 	protected $removedFks = array();
 	protected $modifiedFks = array();
+	
+	protected $addedVendorParameters = array();
+	protected $removedVendorParameters = array();
+	protected $modifiedVendorParameters = array();
 
 	/**
 	 * Setter for the fromTable property
@@ -579,6 +583,131 @@ class PropelTableDiff
 		return $this->modifiedFks;
 	}
 
+	/**
+	 * Setter for the addedVendorParameters property
+	 *
+	 * @param  $addedVendorParameters
+	 */
+	public function setAddedVendorParameters($addedVendorParameters)
+	{
+		$this->addedVendorParameters = $addedVendorParameters;
+	}
+
+	/**
+	 * Add an added VendorParameter
+	 *
+	 * @param string $name
+	 * @param string $value
+	 */
+	public function addAddedVendorParameter($name, $value)
+	{
+		$this->addedVendorParameters[$name] = $value;
+	}
+
+	/**
+	 * Remove an added VendorParameter
+	 *
+	 * @param string $name
+	 */
+	public function removeAddedVendorParameter($name)
+	{
+		unset($this->addedVendorParameters[$name]);
+	}
+
+	/**
+	 * Getter for the addedVendorParameters property
+	 *
+	 * @return array
+	 */
+	public function getAddedVendorParameters()
+	{
+		return $this->addedVendorParameters;
+	}
+
+	/**
+	 * Setter for the removedVendorParameters property
+	 *
+	 * @param  $removedVendorParameters
+	 */
+	public function setRemovedVendorParameters($removedVendorParameters)
+	{
+		$this->removedVendorParameters = $removedVendorParameters;
+	}
+
+	/**
+	 * Add a removed VendorParameter
+	 *
+	 * @param string $name
+	 * @param string $value
+	 */
+	public function addRemovedVendorParameter($name, $value)
+	{
+		$this->removedVendorParameters[$name] = $value;
+	}
+
+	/**
+	 * Remove a removed VendorParameter
+	 *
+	 * @param string $fkName
+	 */
+	public function removeRemovedVendorParameter($fkName)
+	{
+		unset($this->removedVendorParameters[$columnName]);
+	}
+
+	/**
+	 * Getter for the removedVendorParameters property
+	 *
+	 * @return array
+	 */
+	public function getRemovedVendorParameters()
+	{
+		return $this->removedVendorParameters;
+	}
+
+	/**
+	 * Setter for the modifiedVendors property
+	 *
+	 * @param  array $modifiedVendors
+	 */
+	public function setModifiedVendorParameterss($modifiedVendors)
+	{
+		$this->modifiedVendors = $modifiedVendors;
+	}
+
+	/**
+	 * Getter for the modifiedVendors property
+	 *
+	 * @param string $name
+	 * @param mixed  $fromValue
+	 * @param mixed  $toValue
+	 */
+	public function addModifiedVendorParameter($name, $fromValue, $toValue)
+	{
+		$this->modifiedVendors[$name] = array($fromValue, $toValue);
+	}
+
+	/**
+	 * Remove a modified VendorParameter
+	 *
+	 * @param string $name
+	 */
+	public function removeModifiedVendorParameter($name)
+	{
+		unset($this->modifiedVendors[$name]);
+	}
+
+	/**
+	 * Getter for the modifiedVendors property
+	 *
+	 * @return array
+	 */
+	public function getModifiedVendors()
+	{
+		return $this->modifiedVendors;
+	}
+
+	
 	/**
 	 * Get the reverse diff for this diff
 	 *
