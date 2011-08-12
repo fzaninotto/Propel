@@ -181,13 +181,16 @@ SET FOREIGN_KEY_CHECKS = 1;
 			$mysqlTableType = $this->getDefaultTableEngine();
 		}
 
-		$tableOptions = $this->getTableOptions($table);
+		$dbParameters = $table->getDatabase()->getVendorInfoForType('mysql')->getParameters();
+		$tableParameters = $table->getVendorInfoForType('mysql')->getParameters();
+		$parameters = array_merge($dbParameters, $tableParameters);
+		$tableOptions = $this->getTableOptionsDDL($parameters);
 
+		$comment = '';
 		if ($table->getDescription()) {
-			$tableOptions []= 'COMMENT=' . $this->quote($table->getDescription());
+			$comment .= ' COMMENT=' . $this->quote($table->getDescription());
 		}
 
-		$tableOptions = $tableOptions ? ' ' . implode(' ', $tableOptions) : '';
 		$sep = ",
 	";
 
@@ -195,22 +198,24 @@ SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE %s
 (
 	%s
-) %s=%s%s;
+) %s=%s%s%s%s;
 ";
 		return sprintf($pattern,
 			$this->quoteIdentifier($table->getName()),
 			implode($sep, $lines),
 			$this->getTableEngineKeyword(),
 			$mysqlTableType,
-			$tableOptions
+			$tableOptions ? ' ' : '',
+			$tableOptions,
+			$comment
 		);
 	}
 
-	protected function getTableOptions(Table $table)
+	/**
+	 * @return string
+	 */
+	protected function getTableOptionsDDL($parameters)
 	{
-		$dbVI = $table->getDatabase()->getVendorInfoForType('mysql');
-		$tableVI = $table->getVendorInfoForType('mysql');
-		$vi = $dbVI->getMergedVendorInfo($tableVI);
 		$tableOptions = array();
 		// List of supported table options
 		// see http://dev.mysql.com/doc/refman/5.5/en/create-table.html
@@ -235,18 +240,20 @@ CREATE TABLE %s
 			'Union'           => 'UNION',
 		);
 		foreach ($supportedOptions as $name => $sqlName) {
-			if ($vi->hasParameter($name)) {
+			if (isset($parameters[$name])) {
 				$tableOptions []= sprintf('%s=%s',
 					$sqlName,
-					$this->quote($vi->getParameter($name))
+					$this->quote($parameters[$name])
 				);
-			} elseif ($vi->hasParameter($sqlName)) {
+			} elseif (isset($parameters[$sqlName])) {
 				$tableOptions []= sprintf('%s=%s',
 					$sqlName,
-					$this->quote($vi->getParameter($sqlName))
+					$this->quote($parameters[$sqlName])
 				);
 			}
 		}
+		$tableOptions = $tableOptions ? implode(' ', $tableOptions) : '';
+
 		return $tableOptions;
 	}
 
@@ -496,6 +503,84 @@ RENAME TABLE %s TO %s;
 		return sprintf($pattern,
 			$this->quoteIdentifier($fromTableName),
 			$this->quoteIdentifier($toTableName)
+		);
+	}
+
+	/**
+	 * Builds the DDL SQL to alter a table
+	 * based on a PropelTableDiff instance
+	 *
+	 * @return     string
+	 */
+	public function getModifyTableDDL(PropelTableDiff $tableDiff)
+	{
+		$ret = parent::getModifyTableDDL($tableDiff);
+
+		// Added and modified table options are treated the same
+		$newVendorParameters = $tableDiff->getAddedVendorParameters();
+		foreach ($tableDiff->getModifiedVendorParameters() as $name => $values) {
+			list($fromValue, $toValue) = $values;
+			$newVendorParameters[$name] = $toValue;
+		}
+		if ($newVendorParameters) {
+			$table = $tableDiff->getFromTable();
+			if ($database = $table->getDatabase()) {
+				$dbVendorParameters = $database->getVendorInfoForType('mysql')->getParameters();
+				$vendorParameters = array_merge($dbVendorParameters, $newVendorParameters);
+			}
+			$ret .= $this->getAlterTableOptionsDDL($table, $vendorParameters);
+		}
+
+		// Removed table options are ignored, apart from Engine
+		foreach ($tableDiff->getRemovedVendorParameters() as $name => $value) {
+			switch ($name) {
+				case 'Type':
+				case 'Engine';
+					$ret .= $this->getAlterTableRemoveEngineDDL($tableDiff->getFromTable());
+					break;
+				default:
+					// do nothing, as there is no standard way to reset table options in MySQL
+					break;
+			}
+		}
+
+		return $ret;
+	}
+
+	public function getAlterTableOptionsDDL(Table $table, $modifiedVendorParameters)
+	{
+		if (isset($modifiedVendorParameters['Type'])) {
+			$mysqlTableType = $modifiedVendorParameters['Type'];
+			unset($modifiedVendorParameters['Type']);
+		} elseif (isset($modifiedVendorParameters['Engine'])) {
+			$mysqlTableType = $modifiedVendorParameters['Engine'];
+			unset($modifiedVendorParameters['Engine']);
+		} else {
+			$mysqlTableType = '';
+		}
+		$tableOptions = $this->getTableOptionsDDL($modifiedVendorParameters);
+		if ($tableOptions || $mysqlTableType) {
+			$pattern = "
+ALTER TABLE %s%s%s;
+";
+			return sprintf($pattern,
+				$this->quoteIdentifier($table->getName()),
+				$mysqlTableType ? ' ' . $this->getTableEngineKeyword() . '=' . $mysqlTableType : '',
+				$tableOptions ? ' ' . $tableOptions : ''
+			);
+		}
+		return '';
+	}
+
+	public function getAlterTableRemoveEngineDDL(Table $table)
+	{
+		$pattern = "
+ALTER TABLE %s %s=%s;
+";
+		return sprintf($pattern,
+			$this->quoteIdentifier($table->getName()),
+			$this->getTableEngineKeyword(),
+			$this->getDefaultTableEngine()
 		);
 	}
 

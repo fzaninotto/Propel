@@ -666,17 +666,17 @@ class PropelTableDiff
 	}
 
 	/**
-	 * Setter for the modifiedVendors property
+	 * Setter for the modifiedVendorParameters property
 	 *
-	 * @param  array $modifiedVendors
+	 * @param  array $modifiedVendorParameters
 	 */
-	public function setModifiedVendorParameters($modifiedVendors)
+	public function setModifiedVendorParameters($modifiedVendorParameters)
 	{
-		$this->modifiedVendors = $modifiedVendors;
+		$this->modifiedVendorParameters = $modifiedVendorParameters;
 	}
 
 	/**
-	 * Getter for the modifiedVendors property
+	 * Getter for the modifiedVendorParameters property
 	 *
 	 * @param string $name
 	 * @param mixed  $fromValue
@@ -684,7 +684,7 @@ class PropelTableDiff
 	 */
 	public function addModifiedVendorParameter($name, $fromValue, $toValue)
 	{
-		$this->modifiedVendors[$name] = array($fromValue, $toValue);
+		$this->modifiedVendorParameters[$name] = array($fromValue, $toValue);
 	}
 
 	/**
@@ -694,20 +694,19 @@ class PropelTableDiff
 	 */
 	public function removeModifiedVendorParameter($name)
 	{
-		unset($this->modifiedVendors[$name]);
+		unset($this->modifiedVendorParameters[$name]);
 	}
 
 	/**
-	 * Getter for the modifiedVendors property
+	 * Getter for the modifiedVendorParameters property
 	 *
 	 * @return array
 	 */
 	public function getModifiedVendorParameters()
 	{
-		return $this->modifiedVendors;
+		return $this->modifiedVendorParameters;
 	}
 
-	
 	/**
 	 * Get the reverse diff for this diff
 	 *
@@ -845,6 +844,24 @@ class PropelTableDiff
 				if ($fromFk->normalizeFKey($fromFk->getOnDelete()) != $toFk->normalizeFKey($toFk->getOnDelete())) {
 					$ret .= sprintf("          onDelete: from %s to %s\n", $fromFk->getOnDelete(), $toFk->getOnDelete());
 				}
+			}
+		}
+		if ($addedVendorParameters = $this->getAddedVendorParameters()) {
+			$ret .= "    addedVendorParameters:\n";
+			foreach ($addedVendorParameters as $vendorParameterName => $value) {
+				$ret .= sprintf("      - %s\n", $vendorParameterName);
+			}
+		}
+		if ($removedVendorParameters = $this->getRemovedVendorParameters()) {
+			$ret .= "    removedVendorParameters:\n";
+			foreach ($removedVendorParameters as $vendorParameterName => $value) {
+				$ret .= sprintf("      - %s\n", $vendorParameterName);
+			}
+		}
+		if ($modifiedVendorParameters = $this->getModifiedVendorParameters()) {
+			$ret .= "    modifiedVendorParameters:\n";
+			foreach ($modifiedVendorParameters as $vendorParameterName => $valueDiff) {
+				$ret .= sprintf("      - %s\n", $vendorParameterName);
 			}
 		}
 

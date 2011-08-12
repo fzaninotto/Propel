@@ -210,6 +210,183 @@ ALTER TABLE `foo1` ADD CONSTRAINT `foo1_FK_1`
 		$this->assertEquals($expected, $this->getPlatform()->getModifyTableForeignKeysDDL($tableDiff->getReverseDiff()));
 	}
 
+	public function testGetModifyTableAddedVendorParameterDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Checksum" value="1"/>
+			<parameter name="Charset" value="latin-1"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$expected = "
+ALTER TABLE `foo` CHARACTER SET='latin-1' CHECKSUM='1';
+";
+		$this->assertEquals($expected, $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
+	public function testGetModifyTableModifiedVendorParameterDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Checksum" value="1"/>
+			<parameter name="Charset" value="utf8"/>
+			<parameter name="Collate" value="utf8_unicode_ci"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Checksum" value="1"/>
+			<parameter name="Charset" value="latin-1"/>
+			<parameter name="Collate" value="latin1_german1_ci"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$expected = "
+ALTER TABLE `foo` CHARACTER SET='latin-1' COLLATE='latin1_german1_ci';
+";
+		$this->assertEquals($expected, $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
+	public function testGetModifyTableRemovedVendorParameterDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Checksum" value="1"/>
+			<parameter name="Charset" value="latin-1"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$this->assertEquals('', $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
+	public function testGetModifyTableAddedEngineDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Engine" value="ARCHIVE"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$expected = "
+ALTER TABLE `foo` ENGINE=ARCHIVE;
+";
+		$this->assertEquals($expected, $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
+	public function testGetModifyTableModifiedEngineDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Engine" value="InnoDB"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Engine" value="ARCHIVE"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$expected = "
+ALTER TABLE `foo` ENGINE=ARCHIVE;
+";
+		$this->assertEquals($expected, $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
+	public function testGetModifyTableRemovedEngineDDL()
+	{
+		$schema1 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+		<vendor type="mysql">
+			<parameter name="Engine" value="InnoDB"/>
+		</vendor>
+	</table>
+</database>
+EOF;
+		$schema2 = <<<EOF
+<database name="test">
+	<table name="foo">
+		<column name="id" primaryKey="true" type="INTEGER" autoIncrement="true" />
+	</table>
+</database>
+EOF;
+		$t1 = $this->getDatabaseFromSchema($schema1)->getTable('foo');
+		$t2 = $this->getDatabaseFromSchema($schema2)->getTable('foo');
+		$tableDiff = PropelTableComparator::computeDiff($t1,$t2);
+		$expected = "
+ALTER TABLE `foo` ENGINE=MyISAM;
+";
+		$this->assertEquals($expected, $this->getPlatform()->getModifyTableDDL($tableDiff));
+	}
+
 	/**
 	 * @dataProvider providerForTestGetRemoveColumnDDL
 	 */
@@ -281,4 +458,5 @@ ALTER TABLE `foo` ADD
 ";
 		$this->assertEquals($expected, $this->getPlatform()->getAddColumnsDDL($columns));
 	}
+
 }

@@ -187,19 +187,6 @@ class VendorInfo extends XMLElement
 		
 		return $clone;
 	}
-	
-	/**
-	 * Gets a new merged VendorInfo object.
-	 * @param      VendorInfo $info
-	 * @return     VendorInfo new object with merged parameters
-	 */
-	public function getMergedVendorInfo(VendorInfo $merge)
-	{
-		$newParams = array_merge($this->getParameters(), $merge->getParameters());
-		$newInfo = new VendorInfo($this->getType());
-		$newInfo->setParameters($newParams);
-		return $newInfo;
-	}
 
 	/**
 	 * @see        XMLElement::appendXml(DOMNode)
